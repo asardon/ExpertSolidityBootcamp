@@ -7,8 +7,13 @@ contract GasContract is Ownable {
     error InsufficientBalance();
     error RecipientNameTooLong();
     error NeitherAdminNorOwner();
+    error UserMustHaveValidNonZeroAddress();
+    error IdMustBeGtZero();
+    error AmountMustBeGtZero();
+    error AdminMustHaveValidNonZeroAddress();
+    error AmountToSendMustBeGt3();
 
-    uint256 public totalSupply; // cannot be updated
+    uint256 public immutable totalSupply; // cannot be updated
     uint256 public paymentCounter;
     mapping(address => uint256) public balances;
     uint256 constant public tradePercent = 12;
@@ -141,10 +146,8 @@ contract GasContract is Ownable {
         view
         returns (Payment[] memory payments_)
     {
-        require(
-            _user != address(0),
-            "Gas Contract - getPayments function - User must have a valid non zero address"
-        );
+        if(_user == address(0))
+            revert UserMustHaveValidNonZeroAddress();
         return payments[_user];
     }
 
@@ -154,19 +157,12 @@ contract GasContract is Ownable {
         uint256 _amount,
         PaymentType _type
     ) external onlyAdminOrOwner {
-        require(
-            _ID > 0,
-            "Gas Contract - Update Payment function - ID must be greater than 0"
-        );
-        require(
-            _amount > 0,
-            "Gas Contract - Update Payment function - Amount must be greater than 0"
-        );
-        require(
-            _user != address(0),
-            "Gas Contract - Update Payment function - Administrator must have a valid non zero address"
-        );
-
+        if(_ID == 0)
+            revert IdMustBeGtZero();
+        if(_amount == 0)
+            revert AmountMustBeGtZero();
+        if(_user == address(0))
+            revert AdminMustHaveValidNonZeroAddress();
         address senderOfTx = msg.sender;
 
         for (uint256 ii = 0; ii < payments[_user].length; ii++) {
@@ -209,11 +205,9 @@ contract GasContract is Ownable {
         if (wasLastAddedOdd == 1) {
             wasLastOdd = 0;
             isOddWhitelistUser[_userAddrs] = wasLastAddedOdd;
-        } else if (wasLastAddedOdd == 0) {
+        } else {
             wasLastOdd = 1;
             isOddWhitelistUser[_userAddrs] = wasLastAddedOdd;
-        } else {
-            revert("Contract hacked, imposible, call help");
         }
         emit AddedToWhitelist(_userAddrs, _tier);
     }
@@ -225,14 +219,10 @@ contract GasContract is Ownable {
     ) external {
         address senderOfTx = msg.sender;
         assert(whitelist[senderOfTx] < 4);
-        require(
-            balances[senderOfTx] >= _amount,
-            "Gas Contract - whiteTransfers function - Sender has insufficient Balance"
-        );
-        require(
-            _amount > 3,
-            "Gas Contract - whiteTransfers function - amount to send have to be bigger than 3"
-        );
+        if(balances[senderOfTx] < _amount)
+            revert InsufficientBalance();
+        if(_amount <= 3)
+            revert AmountToSendMustBeGt3();
         balances[senderOfTx] -= _amount;
         balances[_recipient] += _amount;
         balances[senderOfTx] += whitelist[senderOfTx];
