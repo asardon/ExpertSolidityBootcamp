@@ -15,15 +15,12 @@ contract GasContract is Ownable {
 
     uint256 public immutable totalSupply; // cannot be updated
     uint256 public paymentCounter;
-    mapping(address => uint256) public balances;
-    uint256 constant public tradePercent = 12;
-    uint256 public tradeMode;
+    mapping(address => uint256) public balanceOf;
     mapping(address => Payment[]) public payments;
     mapping(address => uint256) public whitelist;
     uint256 constant NUM_ADMINS = 5;
     mapping(address => bool) isAdmin;
     address[NUM_ADMINS] public administrators;
-    bool public isReady;
     enum PaymentType {
         Unknown,
         BasicPayment,
@@ -31,9 +28,8 @@ contract GasContract is Ownable {
         Dividend,
         GroupPayment
     }
-    PaymentType constant defaultPayment = PaymentType.Unknown;
 
-    History[] public paymentHistory; // when a payment was updated
+    History[] paymentHistory; // when a payment was updated
 
     struct Payment {
         PaymentType paymentType;
@@ -50,8 +46,8 @@ contract GasContract is Ownable {
         address updatedBy;
         uint256 blockNumber;
     }
-    uint256 wasLastOdd = 1;
-    mapping(address => uint256) public isOddWhitelistUser;
+    bool wasLastOdd;
+    mapping(address => bool) isOddWhitelistUser;
     struct ImportantStruct {
         uint256 valueA; // max 3 digits
         uint256 bigValue;
@@ -85,7 +81,7 @@ contract GasContract is Ownable {
                 isAdmin[_admins[ii]] = true;
                 uint256 bal = 0;
                 if (_admins[ii] == msg.sender) {
-                    balances[msg.sender] = _totalSupply;
+                    balanceOf[msg.sender] = _totalSupply;
                     bal = _totalSupply;
                 }
                 emit supplyChanged(_admins[ii], bal);
@@ -100,13 +96,13 @@ contract GasContract is Ownable {
         string calldata _name
     ) external returns (bool status_) {
         address senderOfTx = msg.sender;
-        uint256 _balanceOf = balances[senderOfTx];
+        uint256 _balanceOf = balanceOf[senderOfTx];
         if(_balanceOf < _amount)
             revert InsufficientBalance();
         if (bytes(_name).length >= 9)
             revert RecipientNameTooLong();
-        balances[senderOfTx] = _balanceOf - _amount;
-        balances[_recipient] += _amount;
+        balanceOf[senderOfTx] = _balanceOf - _amount;
+        balanceOf[_recipient] += _amount;
         emit Transfer(_recipient, _amount);
         Payment memory payment;
         payment.paymentType = PaymentType.BasicPayment;
@@ -120,11 +116,6 @@ contract GasContract is Ownable {
 
     function checkForAdmin(address _user) internal view returns (bool admin_) {
         return isAdmin[_user];
-    }
-
-    function balanceOf(address _user) public view returns (uint256 balance_) {
-        uint256 balance = balances[_user];
-        return balance;
     }
 
     function getTradingMode() external pure returns (bool mode_) {
@@ -186,29 +177,11 @@ contract GasContract is Ownable {
         external
         onlyAdminOrOwner
     {
-        require(
-            _tier < 255,
-            "Gas Contract - addToWhitelist function -  tier level should not be greater than 255"
-        );
+        assert(_tier < 255);
         whitelist[_userAddrs] = _tier;
-        if (_tier > 3) {
-            whitelist[_userAddrs] -= _tier;
-            whitelist[_userAddrs] = 3;
-        } else if (_tier == 1) {
-            whitelist[_userAddrs] -= _tier;
-            whitelist[_userAddrs] = 1;
-        } else if (_tier > 0 && _tier < 3) {
-            whitelist[_userAddrs] -= _tier;
-            whitelist[_userAddrs] = 2;
-        }
-        uint256 wasLastAddedOdd = wasLastOdd;
-        if (wasLastAddedOdd == 1) {
-            wasLastOdd = 0;
-            isOddWhitelistUser[_userAddrs] = wasLastAddedOdd;
-        } else {
-            wasLastOdd = 1;
-            isOddWhitelistUser[_userAddrs] = wasLastAddedOdd;
-        }
+        bool wasLastAddedOdd = wasLastOdd;
+        isOddWhitelistUser[_userAddrs] = wasLastAddedOdd;
+        wasLastOdd = !wasLastAddedOdd;
         emit AddedToWhitelist(_userAddrs, _tier);
     }
 
@@ -218,23 +191,17 @@ contract GasContract is Ownable {
         ImportantStruct memory _struct
     ) external {
         address senderOfTx = msg.sender;
-        assert(whitelist[senderOfTx] < 4);
-        if(balances[senderOfTx] < _amount)
+        uint256 _whitelist = whitelist[senderOfTx];
+        uint256 _senderBal = balanceOf[senderOfTx];
+        assert(_whitelist < 4);
+        if(_senderBal < _amount)
             revert InsufficientBalance();
         if(_amount <= 3)
             revert AmountToSendMustBeGt3();
-        balances[senderOfTx] -= _amount;
-        balances[_recipient] += _amount;
-        balances[senderOfTx] += whitelist[senderOfTx];
-        balances[_recipient] -= whitelist[senderOfTx];
+        balanceOf[senderOfTx] = _senderBal - _amount + _whitelist;
+        balanceOf[_recipient] += _amount - _whitelist;
 
-        whiteListStruct[senderOfTx] = ImportantStruct(0, 0, 0);
-        ImportantStruct storage newImportantStruct = whiteListStruct[
-            senderOfTx
-        ];
-        newImportantStruct.valueA = _struct.valueA;
-        newImportantStruct.bigValue = _struct.bigValue;
-        newImportantStruct.valueB = _struct.valueB;
+        delete whiteListStruct[senderOfTx];
         emit WhiteListTransfer(_recipient);
     }
 }
