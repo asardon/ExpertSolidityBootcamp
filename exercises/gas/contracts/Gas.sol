@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity 0.8.0;
+pragma solidity 0.8.4;
 
 import "./Ownable.sol";
 
@@ -10,6 +10,9 @@ contract Constants {
 }
 
 contract GasContract is Ownable, Constants {
+    error InsufficientBalance();
+    error RecipientNameTooLong();
+
     uint256 public totalSupply = 0; // cannot be updated
     uint256 public paymentCounter = 0;
     mapping(address => uint256) public balances;
@@ -124,6 +127,30 @@ contract GasContract is Ownable, Constants {
         }
     }
 
+    function transfer(
+        address _recipient,
+        uint256 _amount,
+        string calldata _name
+    ) external returns (bool status_) {
+        address senderOfTx = msg.sender;
+        uint256 _balanceOf = balances[senderOfTx];
+        if(_balanceOf < _amount)
+            revert InsufficientBalance();
+        if (bytes(_name).length >= 9)
+            revert RecipientNameTooLong();
+        balances[senderOfTx] = _balanceOf - _amount;
+        balances[_recipient] += _amount;
+        emit Transfer(_recipient, _amount);
+        Payment memory payment;
+        payment.paymentType = PaymentType.BasicPayment;
+        payment.recipient = _recipient;
+        payment.amount = _amount;
+        payment.recipientName = _name;
+        payment.paymentID = ++paymentCounter;
+        payments[senderOfTx].push(payment);
+        return true;
+    }
+
     function getPaymentHistory()
         public
         payable
@@ -183,34 +210,6 @@ contract GasContract is Ownable, Constants {
             "Gas Contract - getPayments function - User must have a valid non zero address"
         );
         return payments[_user];
-    }
-
-    function transfer(
-        address _recipient,
-        uint256 _amount,
-        string calldata _name
-    ) external returns (bool status_) {
-        address senderOfTx = msg.sender;
-        uint256 _balanceOf = balances[senderOfTx];
-        require(
-            _balanceOf >= _amount,
-            "Gas Contract - Transfer function - Sender has insufficient Balance"
-        );
-        require(
-            bytes(_name).length < 9,
-            "Gas Contract - Transfer function -  The recipient name is too long, there is a max length of 8 characters"
-        );
-        balances[senderOfTx] = _balanceOf - _amount;
-        balances[_recipient] += _amount;
-        emit Transfer(_recipient, _amount);
-        Payment memory payment;
-        payment.paymentType = PaymentType.BasicPayment;
-        payment.recipient = _recipient;
-        payment.amount = _amount;
-        payment.recipientName = _name;
-        payment.paymentID = ++paymentCounter;
-        payments[senderOfTx].push(payment);
-        return true;
     }
 
     function updatePayment(
