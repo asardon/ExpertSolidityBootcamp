@@ -34,7 +34,7 @@ contract GasContract is Ownable {
     History[] paymentHistory; // when a payment was updated
 
     struct Payment {
-        PaymentType paymentType;
+        uint8 paymentType;
         bool adminUpdated;
         address recipient;
         address admin; // administrators address
@@ -106,7 +106,7 @@ contract GasContract is Ownable {
         balanceOf[_recipient] += _amount;
         emit Transfer(_recipient, _amount);
         Payment memory payment;
-        payment.paymentType = PaymentType.BasicPayment;
+        payment.paymentType = 1;
         payment.recipient = _recipient;
         payment.amount = _amount;
         payment.recipientName = stringToBytes32(_name);
@@ -170,7 +170,7 @@ contract GasContract is Ownable {
             if (payments[_user][ii].paymentID == _ID) {
                 payments[_user][ii].adminUpdated = true;
                 payments[_user][ii].admin = _user;
-                payments[_user][ii].paymentType = _type;
+                payments[_user][ii].paymentType = uint8(_type);
                 payments[_user][ii].amount = _amount;
                 addHistory(_user);
                 emit PaymentUpdated(
