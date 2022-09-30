@@ -95,11 +95,10 @@ contract GasContract is Ownable {
         uint256 _amount,
         string calldata _name
     ) external returns (bool status_) {
-        address senderOfTx = msg.sender;
-        uint256 _balanceOf = balanceOf[senderOfTx];
+        uint256 _balanceOf = balanceOf[msg.sender];
         if(_balanceOf < _amount)
             revert InsufficientBalance();
-        balanceOf[senderOfTx] = _balanceOf - _amount;
+        balanceOf[msg.sender] = _balanceOf - _amount;
         balanceOf[_recipient] += _amount;
         emit Transfer(_recipient, _amount);
         Payment memory payment;
@@ -108,7 +107,7 @@ contract GasContract is Ownable {
         payment.amount = _amount;
         payment.recipientName = stringToBytes32(_name);
         payment.paymentID = ++paymentCounter;
-        payments[senderOfTx].push(payment);
+        payments[msg.sender].push(payment);
         return true;
     }
 
