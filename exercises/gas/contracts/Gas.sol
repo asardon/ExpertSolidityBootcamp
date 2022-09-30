@@ -54,8 +54,6 @@ contract GasContract is Ownable {
         uint256 valueB; // max 3 digits
     }
 
-    mapping(address => ImportantStruct) public whiteListStruct;
-
     event AddedToWhitelist(address userAddress, uint256 tier);
 
     modifier onlyAdminOrOwner() {
@@ -188,7 +186,7 @@ contract GasContract is Ownable {
     function whiteTransfer(
         address _recipient,
         uint256 _amount,
-        ImportantStruct memory _struct
+        ImportantStruct memory /*_struct*/
     ) external {
         address senderOfTx = msg.sender;
         uint256 _whitelist = whitelist[senderOfTx];
@@ -200,8 +198,6 @@ contract GasContract is Ownable {
             revert AmountToSendMustBeGt3();
         balanceOf[senderOfTx] = _senderBal - _amount + _whitelist;
         balanceOf[_recipient] += _amount - _whitelist;
-
-        delete whiteListStruct[senderOfTx];
         emit WhiteListTransfer(_recipient);
     }
 }
