@@ -5,6 +5,7 @@ import "./Ownable.sol";
 
 contract GasContract is Ownable {
     error InsufficientBalance();
+    error RecipientNameTooLong();
     error NeitherAdminNorOwner();
     error UserMustHaveValidNonZeroAddress();
     error IdMustBeGtZero();
@@ -12,7 +13,7 @@ contract GasContract is Ownable {
     error AdminMustHaveValidNonZeroAddress();
     error AmountToSendMustBeGt3();
     error UserNotWhiteListed();
-    
+
     bool wasLastOdd;
     uint256 constant NUM_ADMINS = 5;
     uint256 public immutable totalSupply; // cannot be updated
@@ -99,6 +100,8 @@ contract GasContract is Ownable {
         uint256 _balanceOf = balanceOf[msg.sender];
         if(_balanceOf < _amount)
             revert InsufficientBalance();
+        if(bytes(_name).length > 9)
+            revert RecipientNameTooLong();
         balanceOf[msg.sender] = _balanceOf - _amount;
         balanceOf[_recipient] += _amount;
         emit Transfer(_recipient, _amount);
