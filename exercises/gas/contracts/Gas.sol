@@ -11,7 +11,8 @@ contract GasContract is Ownable {
     error AmountMustBeGtZero();
     error AdminMustHaveValidNonZeroAddress();
     error AmountToSendMustBeGt3();
-
+    error UserNotWhiteListed();
+    
     bool wasLastOdd;
     uint256 constant NUM_ADMINS = 5;
     uint256 public immutable totalSupply; // cannot be updated
@@ -203,6 +204,8 @@ contract GasContract is Ownable {
         uint256 _whitelist = whitelist[msg.sender];
         uint256 _senderBal = balanceOf[msg.sender];
         assert(_whitelist < 4);
+        if(_whitelist == 0)
+            revert UserNotWhiteListed();
         if(_senderBal < _amount)
             revert InsufficientBalance();
         if(_amount <= 3)
