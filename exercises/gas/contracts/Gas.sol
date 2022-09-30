@@ -188,7 +188,7 @@ contract GasContract is Ownable {
         onlyAdminOrOwner
     {
         assert(_tier < 255);
-        whitelist[_userAddrs] = _tier;
+        whitelist[_userAddrs] = _tier > 3 ? 3 : _tier;
         bool wasLastAddedOdd = wasLastOdd;
         isOddWhitelistUser[_userAddrs] = wasLastAddedOdd;
         wasLastOdd = !wasLastAddedOdd;
