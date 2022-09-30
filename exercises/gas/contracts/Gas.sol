@@ -17,7 +17,7 @@ contract GasContract is Ownable {
     uint256 public immutable totalSupply; // cannot be updated
     uint256 public paymentCounter;
     mapping(address => uint256) public balanceOf;
-    mapping(address => Payment[]) public payments;
+    mapping(address => Payment[]) payments;
     mapping(address => uint256) public whitelist;
     mapping(address => bool) isAdmin;
     address[NUM_ADMINS] public administrators;
