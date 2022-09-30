@@ -163,7 +163,6 @@ contract GasContract is Ownable {
             revert AmountMustBeGtZero();
         if(_user == address(0))
             revert AdminMustHaveValidNonZeroAddress();
-        address senderOfTx = msg.sender;
 
         for (uint256 ii = 0; ii < payments[_user].length;) {
             if (payments[_user][ii].paymentID == _ID) {
@@ -173,7 +172,7 @@ contract GasContract is Ownable {
                 payments[_user][ii].amount = _amount;
                 addHistory(_user);
                 emit PaymentUpdated(
-                    senderOfTx,
+                    msg.sender,
                     _ID,
                     _amount,
                     payments[_user][ii].recipientName
@@ -202,15 +201,14 @@ contract GasContract is Ownable {
         uint256 _amount,
         ImportantStruct memory /*_struct*/
     ) external {
-        address senderOfTx = msg.sender;
-        uint256 _whitelist = whitelist[senderOfTx];
-        uint256 _senderBal = balanceOf[senderOfTx];
+        uint256 _whitelist = whitelist[msg.sender];
+        uint256 _senderBal = balanceOf[msg.sender];
         assert(_whitelist < 4);
         if(_senderBal < _amount)
             revert InsufficientBalance();
         if(_amount <= 3)
             revert AmountToSendMustBeGt3();
-        balanceOf[senderOfTx] = _senderBal - _amount + _whitelist;
+        balanceOf[msg.sender] = _senderBal - _amount + _whitelist;
         balanceOf[_recipient] += _amount - _whitelist;
         emit WhiteListTransfer(_recipient);
     }
