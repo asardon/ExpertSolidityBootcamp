@@ -166,7 +166,8 @@ contract GasContract is Ownable {
         if(_user == address(0))
             revert AdminMustHaveValidNonZeroAddress();
 
-        for (uint256 ii = 0; ii < payments[_user].length;) {
+        uint256 arrayLen = payments[_user].length;
+        for (uint256 ii = 0; ii < arrayLen;) {
             if (payments[_user][ii].paymentID == _ID) {
                 payments[_user][ii].adminUpdated = true;
                 payments[_user][ii].admin = _user;
@@ -179,6 +180,7 @@ contract GasContract is Ownable {
                     _amount,
                     payments[_user][ii].recipientName
                 );
+                break;
             }
             unchecked{
                  ii++;
