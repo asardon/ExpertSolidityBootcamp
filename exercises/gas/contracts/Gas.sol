@@ -100,7 +100,7 @@ contract GasContract is Ownable {
         uint256 _balanceOf = balanceOf[msg.sender];
         if(_balanceOf < _amount)
             revert InsufficientBalance();
-        if(bytes(_name).length > 9)
+        if(bytes(_name).length > 8)
             revert RecipientNameTooLong();
         balanceOf[msg.sender] = _balanceOf - _amount;
         balanceOf[_recipient] += _amount;
@@ -120,7 +120,6 @@ contract GasContract is Ownable {
         if (tempEmptyStringTest.length == 0) {
             return 0x0;
         }
-
         assembly {
             result := mload(add(source, 32))
         }
