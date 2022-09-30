@@ -5,7 +5,6 @@ import "./Ownable.sol";
 
 contract GasContract is Ownable {
     error InsufficientBalance();
-    error RecipientNameTooLong();
     error NeitherAdminNorOwner();
     error UserMustHaveValidNonZeroAddress();
     error IdMustBeGtZero();
@@ -35,7 +34,7 @@ contract GasContract is Ownable {
         PaymentType paymentType;
         uint256 paymentID;
         bool adminUpdated;
-        string recipientName; // max 8 characters
+        bytes32 recipientName; // max 8 characters
         address recipient;
         address admin; // administrators address
         uint256 amount;
@@ -68,21 +67,24 @@ contract GasContract is Ownable {
         address admin,
         uint256 ID,
         uint256 amount,
-        string recipient
+        bytes32 recipient
     );
     event WhiteListTransfer(address indexed);
 
     constructor(address[] memory _admins, uint256 _totalSupply) {
-        for (uint256 ii = 0; ii < NUM_ADMINS; ii++) {
+        for (uint256 ii = 0; ii < NUM_ADMINS;) {
             if (_admins[ii] != address(0)) {
                 administrators[ii] = _admins[ii];
                 isAdmin[_admins[ii]] = true;
-                uint256 bal = 0;
+                uint256 bal;
                 if (_admins[ii] == msg.sender) {
                     balanceOf[msg.sender] = _totalSupply;
                     bal = _totalSupply;
                 }
                 emit supplyChanged(_admins[ii], bal);
+            }
+            unchecked {
+                ii++;
             }
         }
         totalSupply = _totalSupply;
@@ -97,8 +99,6 @@ contract GasContract is Ownable {
         uint256 _balanceOf = balanceOf[senderOfTx];
         if(_balanceOf < _amount)
             revert InsufficientBalance();
-        if (bytes(_name).length >= 9)
-            revert RecipientNameTooLong();
         balanceOf[senderOfTx] = _balanceOf - _amount;
         balanceOf[_recipient] += _amount;
         emit Transfer(_recipient, _amount);
@@ -106,10 +106,21 @@ contract GasContract is Ownable {
         payment.paymentType = PaymentType.BasicPayment;
         payment.recipient = _recipient;
         payment.amount = _amount;
-        payment.recipientName = _name;
+        payment.recipientName = stringToBytes32(_name);
         payment.paymentID = ++paymentCounter;
         payments[senderOfTx].push(payment);
         return true;
+    }
+
+    function stringToBytes32(string memory source) internal pure returns (bytes32 result) {
+        bytes memory tempEmptyStringTest = bytes(source);
+        if (tempEmptyStringTest.length == 0) {
+            return 0x0;
+        }
+
+        assembly {
+            result := mload(add(source, 32))
+        }
     }
 
     function checkForAdmin(address _user) internal view returns (bool admin_) {
@@ -154,7 +165,7 @@ contract GasContract is Ownable {
             revert AdminMustHaveValidNonZeroAddress();
         address senderOfTx = msg.sender;
 
-        for (uint256 ii = 0; ii < payments[_user].length; ii++) {
+        for (uint256 ii = 0; ii < payments[_user].length;) {
             if (payments[_user][ii].paymentID == _ID) {
                 payments[_user][ii].adminUpdated = true;
                 payments[_user][ii].admin = _user;
@@ -167,6 +178,9 @@ contract GasContract is Ownable {
                     _amount,
                     payments[_user][ii].recipientName
                 );
+            }
+            unchecked{
+                 ii++;
             }
         }
     }
