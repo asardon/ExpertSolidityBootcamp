@@ -12,12 +12,13 @@ contract GasContract is Ownable {
     error AdminMustHaveValidNonZeroAddress();
     error AmountToSendMustBeGt3();
 
+    bool wasLastOdd;
+    uint256 constant NUM_ADMINS = 5;
     uint256 public immutable totalSupply; // cannot be updated
     uint256 public paymentCounter;
     mapping(address => uint256) public balanceOf;
     mapping(address => Payment[]) public payments;
     mapping(address => uint256) public whitelist;
-    uint256 constant NUM_ADMINS = 5;
     mapping(address => bool) isAdmin;
     address[NUM_ADMINS] public administrators;
     enum PaymentType {
@@ -32,11 +33,11 @@ contract GasContract is Ownable {
 
     struct Payment {
         PaymentType paymentType;
-        uint256 paymentID;
         bool adminUpdated;
-        bytes32 recipientName; // max 8 characters
         address recipient;
         address admin; // administrators address
+        uint256 paymentID;
+        bytes32 recipientName; // max 8 characters
         uint256 amount;
     }
 
@@ -45,7 +46,6 @@ contract GasContract is Ownable {
         address updatedBy;
         uint256 blockNumber;
     }
-    bool wasLastOdd;
     mapping(address => bool) isOddWhitelistUser;
     struct ImportantStruct {
         uint256 valueA; // max 3 digits
