@@ -18,6 +18,7 @@ task("accounts", "Prints the list of accounts", async (taskArgs, hre) => {
  */
 module.exports = {
   solidity: {
+<<<<<<< HEAD
     version: "0.8.4",
     settings: {
       optimizer: {
@@ -25,6 +26,13 @@ module.exports = {
         runs: 1000,
       },
     },
+=======
+    compilers: [
+      {
+        version: "0.8.0",
+      },
+    ],
+>>>>>>> 1636735a02cbd44304e3eed635e36d816db4f8eb
   },
   gasReporter: {
     currency: "USD",

@@ -4,7 +4,11 @@
 2. Run ` npm i` to install the dependencies
 3. Run ` npx hardhat test` to run the tests and get a gas usage report
 
+<<<<<<< HEAD
 ![](https://imgur.com/a/GWj9Fqb)
+=======
+![](https://i.imgur.com/qdNy92B.png)
+>>>>>>> 1636735a02cbd44304e3eed635e36d816db4f8eb
 
 If you prefer to use a different IDE, you may, but you will need to make sure the contract passes the same tests.
 
@@ -18,6 +22,7 @@ you can slightly adjust tests for whitelist functions if you need so.
 In order to generate storage diagram run the following command:
 
 `sol2uml storage ./contracts/ -c GasContract -o gasStorage.svg`
+<<<<<<< HEAD
 
 ## Base Gas Cost
 ```
@@ -64,3 +69,5 @@ In order to generate storage diagram run the following command:
 |  GasContract                     ·          -  ·          -  ·     1325166  ·        4.4 %  ·          -  │
 ·----------------------------------|-------------|-------------|--------------|---------------|-------------·
 ```
+=======
+>>>>>>> 1636735a02cbd44304e3eed635e36d816db4f8eb
