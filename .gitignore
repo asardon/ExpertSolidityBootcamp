@@ -1,2 +1,5 @@
-
+cache/
+artifacts/
+node_modules/
+gasStorage.svg
 .DS_Store
